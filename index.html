@@ -149,9 +149,27 @@
 
   /* GALERIA */
   .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:160px;gap:14px;}
-  .gallery-grid a{border-radius:16px;overflow:hidden;display:block;position:relative;}
+  .gallery-grid a{border-radius:16px;overflow:hidden;display:block;position:relative;cursor:zoom-in;}
   .gallery-grid img{width:100%;height:100%;object-fit:cover;transition:transform .4s ease;}
   .gallery-grid a:hover img{transform:scale(1.06);}
+
+  /* LIGHTBOX */
+  .lightbox{
+    position:fixed;inset:0;z-index:200;background:rgba(20,16,11,0.92);
+    display:none;align-items:center;justify-content:center;padding:40px;
+  }
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:90vw;max-height:86vh;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.5);}
+  .lightbox-close,.lightbox-prev,.lightbox-next{
+    position:absolute;background:rgba(255,255,255,0.12);border:none;color:#fff;
+    width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:background .2s;font-size:20px;
+  }
+  .lightbox-close:hover,.lightbox-prev:hover,.lightbox-next:hover{background:rgba(255,255,255,0.25);}
+  .lightbox-close{top:24px;right:24px;}
+  .lightbox-prev{left:24px;top:50%;transform:translateY(-50%);}
+  .lightbox-next{right:24px;top:50%;transform:translateY(-50%);}
+  @media (max-width:700px){.lightbox-prev,.lightbox-next{width:38px;height:38px;}}
   .g1{grid-column:span 2;grid-row:span 2;}
   .g2{grid-row:span 1;}
   .g5{grid-column:span 2;grid-row:span 1;}
@@ -343,13 +361,13 @@
       <p>Codzienność naszych psów — od pierwszych dni szczenięcych do dorosłego życia.</p>
     </div>
     <div class="gallery-grid fade">
-      <a class="g1"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.13.jpeg" alt=""></a>
-      <a class="g2"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.07.jpeg" alt=""></a>
-      <a class="g2"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.03.jpeg" alt=""></a>
-      <a class="g5"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.04.jpeg" alt=""></a>
-      <a class="g2"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.15.jpeg" alt=""></a>
-      <a class="g2"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.09.jpeg" alt=""></a>
-      <a class="g2"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.16.jpeg" alt=""></a>
+      <a class="g1 lightbox-trigger" data-index="0"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.13.jpeg" alt=""></a>
+      <a class="g2 lightbox-trigger" data-index="1"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.07.jpeg" alt=""></a>
+      <a class="g2 lightbox-trigger" data-index="2"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.03.jpeg" alt=""></a>
+      <a class="g5 lightbox-trigger" data-index="3"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.04.jpeg" alt=""></a>
+      <a class="g2 lightbox-trigger" data-index="4"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.15.jpeg" alt=""></a>
+      <a class="g2 lightbox-trigger" data-index="5"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.09.jpeg" alt=""></a>
+      <a class="g2 lightbox-trigger" data-index="6"><img src="baniowa-polana-assets/gallery/photo_2026-06-25_12.52.16.jpeg" alt=""></a>
     </div>
   </div>
 </section>
@@ -398,12 +416,53 @@
   </div>
 </footer>
 
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Zamknij">&times;</button>
+  <button class="lightbox-prev" id="lightboxPrev" aria-label="Poprzednie">&#8249;</button>
+  <img id="lightboxImg" src="" alt="">
+  <button class="lightbox-next" id="lightboxNext" aria-label="Następne">&#8250;</button>
+</div>
+
 <script>
   const els = document.querySelectorAll('.fade');
   const io = new IntersectionObserver((entries)=>{
     entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
   },{threshold:0.12});
   els.forEach(el=>io.observe(el));
+
+  const triggers = Array.from(document.querySelectorAll('.lightbox-trigger'));
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  let current = 0;
+
+  function showImage(i){
+    current = (i + triggers.length) % triggers.length;
+    const src = triggers[current].querySelector('img').src;
+    lightboxImg.src = src;
+  }
+  function openLightbox(i){
+    showImage(i);
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox(){
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  triggers.forEach((t,i)=>{
+    t.addEventListener('click', (e)=>{ e.preventDefault(); openLightbox(i); });
+  });
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  document.getElementById('lightboxPrev').addEventListener('click', ()=>showImage(current-1));
+  document.getElementById('lightboxNext').addEventListener('click', ()=>showImage(current+1));
+  lightbox.addEventListener('click', (e)=>{ if(e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', (e)=>{
+    if(!lightbox.classList.contains('open')) return;
+    if(e.key === 'Escape') closeLightbox();
+    if(e.key === 'ArrowLeft') showImage(current-1);
+    if(e.key === 'ArrowRight') showImage(current+1);
+  });
 </script>
 
 </body>
