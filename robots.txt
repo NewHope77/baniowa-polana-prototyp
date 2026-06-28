@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://basniowapolana.pl/sitemap.xml
